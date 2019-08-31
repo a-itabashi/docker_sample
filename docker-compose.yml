@@ -1,0 +1,45 @@
+version: '3'
+services:
+  app:
+    build:
+      context: .
+    environment:
+      APP_DATABASE_HOST: db
+      APP_DATABASE: app_development
+      APP_DATABASE_USER: root
+      APP_DATABASE_PASSWORD: root
+    command: bundle exec puma -C config/puma.rb
+    volumes:
+      - .:/app
+      - public-data:/app/public
+      - tmp-data:/app/tmp
+      - log-data:/app/log
+    depends_on:
+      - db
+  db:
+    restart: always
+    image: mysql:latest
+    ports:
+      - 3306:3306
+    command: --default-authentication-plugin=mysql_native_password
+    volumes:
+      - mysql-datavolume:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+  web:
+    build:
+      context: containers/nginx
+    volumes:
+      - public-data:/app/public
+      - tmp-data:/app/tmp
+    ports:
+      - 80:80
+    depends_on:
+      - app
+volumes:
+  public-data:
+  tmp-data:
+  log-data:
+  db-data:
+  mysql-datavolume:
+    driver: local
